@@ -11,12 +11,16 @@ public class Parser {
 
     private Lexer lexer;
 
-    private String[] names = {"t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"};
+//    private String[] names = {"t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"};
+    private CalculatorStruction[] names = new CalculatorStruction[8];
 
     private int nameP = -1;
 
     public Parser(Lexer lexer) {
         this.lexer = lexer;
+        for (int i = 0; i < names.length; i++) {
+            names[i] = new CalculatorStruction("t" + i, 0.0);
+        }
     }
 
     /**
@@ -37,6 +41,7 @@ public class Parser {
                 MyLog.i(TAG,"Inserting missing semicolon: " + lexer.yylineno);
             }
         }
+        MyLog.i(TAG, "Pase end.");
     }
 
     /**
@@ -49,7 +54,7 @@ public class Parser {
             System.exit(1);
         }
         nameP++;
-        String reg = names[nameP];
+        String reg = names[nameP].regName;
         return reg;
     }
 
@@ -59,7 +64,7 @@ public class Parser {
      */
     private void freeNames(String s) {
         if (nameP > 0) {
-            names[nameP] = s;
+            names[nameP].regName = s;
             nameP--;
         } else {
             MyLog.i(TAG, "(Internal error) Name stack underflow: " + lexer.yylineno);
@@ -73,11 +78,28 @@ public class Parser {
     private void expression(String tempVar) {
         String tempVar2;
         term(tempVar);
+        while (lexer.match(Lexer.TIMES)) {
+            lexer.advance();
+            tempVar2 = newRegisterName();
+            term(tempVar2);
+            MyLog.i(TAG,tempVar + " *= " + tempVar2);
+//            names[nameP - 1].val *= names[nameP].val;
+            freeNames(tempVar2);
+        }
+        while (lexer.match(Lexer.DIV)) {
+            lexer.advance();
+            tempVar2 = newRegisterName();
+            term(tempVar2);
+            MyLog.i(TAG,tempVar + " /= " + tempVar2);
+//            names[nameP - 1].val /= names[nameP].val;
+            freeNames(tempVar2);
+        }
         while (lexer.match(Lexer.PLUS)) {
             lexer.advance();
             tempVar2 = newRegisterName();
             term(tempVar2);
             MyLog.i(TAG,tempVar + " += " + tempVar2);
+//            names[nameP - 1].val += names[nameP].val;
             freeNames(tempVar2);
         }
         while (lexer.match(Lexer.SUB)) {
@@ -85,6 +107,7 @@ public class Parser {
             tempVar2 = newRegisterName();
             term(tempVar2);
             MyLog.i(TAG,tempVar + " -= " + tempVar2);
+//            names[nameP - 1].val -= names[nameP].val;
             freeNames(tempVar2);
         }
     }
@@ -102,6 +125,7 @@ public class Parser {
             tempVar2 = newRegisterName();
             factor(tempVar2);
             MyLog.i(TAG, tempVar + " *= " + tempVar2);
+//            names[nameP - 1].val *= names[nameP].val;
             freeNames(tempVar2);
         }
         while (lexer.match(Lexer.DIV)) {
@@ -109,6 +133,23 @@ public class Parser {
             tempVar2 = newRegisterName();
             factor(tempVar2);
             MyLog.i(TAG, tempVar + " /= " + tempVar2);
+//            names[nameP - 1].val /= names[nameP].val;
+            freeNames(tempVar2);
+        }
+        while (lexer.match(Lexer.PLUS)) {
+            lexer.advance();
+            tempVar2 = newRegisterName();
+            factor(tempVar2);
+            MyLog.i(TAG, tempVar + " += " + tempVar2);
+//            names[nameP - 1].val += names[nameP].val;
+            freeNames(tempVar2);
+        }
+        while (lexer.match(Lexer.SUB)) {
+            lexer.advance();
+            tempVar2 = newRegisterName();
+            factor(tempVar2);
+            MyLog.i(TAG, tempVar + " -= " + tempVar2);
+//            names[nameP - 1].val -= names[nameP].val;
             freeNames(tempVar2);
         }
     }
@@ -120,6 +161,8 @@ public class Parser {
     private void factor(String tempVar) {
         if (lexer.match(Lexer.NUM_OR_ID)) {
             MyLog.i(TAG,tempVar + " = " + lexer.yytext);
+            names[nameP].val = Double.parseDouble(lexer.yytext);
+            MyLog.i(TAG, "Value:   " + names[nameP].val);
             lexer.advance();
         } else if (lexer.match(Lexer.LP)) {
             lexer.advance();
