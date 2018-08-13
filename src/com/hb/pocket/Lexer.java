@@ -23,25 +23,33 @@ public class Lexer {
      */
     public static final int PLUS = 2;
     /**
+     * The '-' symbol.
+     */
+    public static final int SUB = 3;
+    /**
      * The '*' symbol.
      */
-    public static final int TIMES = 3;
+    public static final int TIMES = 4;
+    /**
+     * The '/' symbol.
+     */
+    public static final int DIV = 5;
     /**
      * The left bracket '(' symbol.
      */
-    public static final int LP = 4;
+    public static final int LP = 6;
     /**
      * The right bracket ')' symbol.
      */
-    public static final int RP = 5;
+    public static final int RP = 7;
     /**
      * Numberic symbol.
      */
-    public static final int NUM_OR_ID = 6;
+    public static final int NUM_OR_ID = 8;
     /**
      * Unknown symbol.
      */
-    public static final int UNKNOWN_SYMBOL = 7;
+    public static final int UNKNOWN_SYMBOL = 9;
 
     private int lookAhead = -1;
 
@@ -106,10 +114,20 @@ public class Lexer {
                         current = current.substring(1);
                         return PLUS;
                     }
+                    case '-' :
+                    {
+                        current = current.substring(1);
+                        return SUB;
+                    }
                     case '*' :
                     {
                         current = current.substring(1);
                         return TIMES;
+                    }
+                    case '/' :
+                    {
+                        current = current.substring(1);
+                        return DIV;
                     }
                     case '(' :
                     {
@@ -161,7 +179,7 @@ public class Lexer {
 
     public void runLexer() {
         while (!match(EOI)) {
-            MyLog.i(TAG, "Token: " + token() + " ,Symbol: " + yytext + "  LineNo: " + yylineno);
+            MyLog.i(TAG, "Token: " + token() + "\t\t Symbol: " + yytext + "\t\t LineNo: " + yylineno);
             advance();
         }
     }
@@ -183,9 +201,19 @@ public class Lexer {
                 token = "PLUS";
                 break;
             }
+            case SUB :
+            {
+                token = "SUB";
+                break;
+            }
             case TIMES :
             {
                 token = "TIMES";
+                break;
+            }
+            case DIV :
+            {
+                token = "DIV";
                 break;
             }
             case NUM_OR_ID :
